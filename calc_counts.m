@@ -49,5 +49,10 @@ mean_counts = mean([photons_10keV(start_energy_index:end), photons_20keV],2);
 
 plot(energy_20kev, mean_counts, 'gr')
 
-figure
-plot(E, Counts)
+energy = energy_20kev;
+photons = mean_counts;
+save('spectrum_mean', 'energy', 'photons')
+
+% csvwrite('Comet100kV_counts.csv',[energy, photons])
+% csvwrite('Comet100kV_counts_10keV.csv',[energy_10kev, photons_10keV])
+% csvwrite('Comet100kV_counts_20keV.csv',[energy_20kev, photons_20keV])
