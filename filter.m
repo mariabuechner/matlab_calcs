@@ -12,7 +12,7 @@ thetas = 0;
 
 %% Constants
 number_phase_steps = 31;
-exposure_time = 1; % [s]
+exposure_time = 1; % [s] ??? How does it influence???
 
 % attenuation coefficients
 mu_sample = 0; % mu_sample(energy) [1/um] (PMMA)
