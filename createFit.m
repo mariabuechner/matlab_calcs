@@ -57,6 +57,9 @@ y((y-165)==0) = [];
 x_final = [0, x];
 y_final = [166.0, y];
 
+x_final = [-fliplr(x_final(2:end)), x_final];
+y_final = [fliplr(y_final(2:end)), y_final];
+
 
 %% Fit: 'untitled fit 2'.
 [xData, yData] = prepareCurveData( x_final, y_final );
@@ -93,17 +96,23 @@ plot( fitresult, 'predobs');
 legend('points', 'fit', '95% confidence interval');
 xlabel('x [mm]')
 ylabel('y [mm]')
+plot(xlim, [1 1]*165, 'b')
+
 
 %%
 % x = [0:0.003566:0.5];
-% x_inter = x(1:17);
-x_inter = [x(1):0.1:x(17)+0.1];
+x_inter = x_final;
+% x_inter = [-fliplr(x_final(2:end)), x_final];
 
-y = fitresult.p1.*x_inter.^2 + fitresult.p2.*x_inter + fitresult.p3;
+% y = fitresult.p1.*x_inter.^2 + fitresult.p2.*x_inter + fitresult.p3;
 
-figure(3)
+y = fitresult.p1.*x_inter.^6 + fitresult.p2.*x_inter.^5 + fitresult.p3.*x_inter.^4 + fitresult.p4.*x_inter.^3 + fitresult.p5.*x_inter.^2 + fitresult.p6.*x_inter + fitresult.p7;
+y = y - fitresult.p7; 
+
+figure(4)
 hold on
 plot( x_inter, y, 'gr');
+
 
 %%
 
