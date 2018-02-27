@@ -22,27 +22,32 @@ load('results_0_7-rad_49_50-step_30_82-keV.mat')
 filter_thicknesses_1 = filter_thicknesses(1:8)*1e3; % [mm] was saved 1e-3 too small
 x_1 = x(1:8); % [mm]
 y_1 = y(1:8); % [mm]
+sample_thicknesses_1 = sample_thicknesses(1:8);
 
 load('results_8_16-rad_49_50-step_30_82-keV.mat')
 filter_thicknesses_2 = filter_thicknesses(9:17)*1e3; % [mm] was saved 1e-3 too small
 x_2 = x(9:17); % [mm]
 y_2 = y(9:17); % [mm]
+sample_thicknesses_2 = sample_thicknesses(9:17);
 
 load('results_17_end-rad_49_50-step_30_82-keV.mat')
 filter_thicknesses_3 = filter_thicknesses(18:end); % [mm]
 x_3 = x(18:end); % [mm]
 y_3 = y(18:end); % [mm]
-
+sample_thicknesses_3 = sample_thicknesses(18:end);
 
 filter_thicknesses(1:8) = filter_thicknesses_1;
 x(1:8) = x_1;
 y(1:8) = y_1;
+sample_thicknesses(1:8) = sample_thicknesses_1;
 filter_thicknesses(9:17) = filter_thicknesses_2;
 x(9:17) = x_2;
 y(9:17) = y_2;
+sample_thicknesses(9:17) = sample_thicknesses_2;
 filter_thicknesses(18:end) = filter_thicknesses_3;
 x(18:end) = x_3;
 y(18:end) = y_3;
+sample_thicknesses(18:end) = sample_thicknesses_3;
 
 % x_final = x;
 % y_final = y;
@@ -95,7 +100,7 @@ plot( xData, yData, 'o' );
 plot( fitresult, 'predobs');
 legend('points', 'fit', '95% confidence interval');
 xlabel('x [mm]')
-ylabel('y [mm]')
+ylabel('z [mm]')
 plot(xlim, [1 1]*165, 'b')
 
 
@@ -114,7 +119,132 @@ hold on
 plot( x_inter, y, 'gr');
 
 
-%%
+%% Show spectral development
+clear all
+close all
+load('spectrum_dev.mat')
+energies = [30:82];
+
+% Colors
+% Greens
+% light_green = [0 177 64] /255;
+% middle_green = [0 122 51] / 255;
+% dark_green = [33 87 50] / 255;
+% Dark to light:
+green_reds = [33:(0-33)/(length(thetas)-1):0] / 255;
+green_greens = [87:(177-87)/(length(thetas)-1):177] / 255;
+green_blues = [50:(64-50)/(length(thetas)-1):64] / 255;
+% green_reds = zeros(1,length(thetas));
+% green_greens = [122:(177-122)/(length(thetas)-1):177] / 255;
+% green_blues = [51:(64-51)/(length(thetas)-1):64] / 255;
+
+% Reds
+% yellow_red = [255 204 0] / 255;
+% middle_red = [255 102 0] / 255;
+% dark_red = [255 0 0] / 255;
+% Dark to light:
+red_reds = ones(1,length(thetas));
+red_greens = [0:(204-0)/(length(thetas)-1):204] / 255;
+red_blues = zeros(1,length(thetas));
+
+line_width = 2; 
+font_size = 28;
+
+% Absolute counts
+% After filter
+legend_string = strings(1, length(thetas));
+figure(1)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+% title('Spectrum after filter, absolute photons')
+hold on
+for ii=1:length(thetas)
+    plot(energies, filtered_photons(ii, :), 'Color', [green_reds(ii), green_greens(ii), green_blues(ii)], 'LineWidth', line_width)
+    legend_string(ii) = num2str(thetas(ii));
+end
+% legend(legend_string)
+ylabel('Photons')
+xlabel('Energies [kev]')
+% After sample
+figure(2)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+% title('Spectrum after sample, absolute photons')
+hold on
+for ii=1:length(thetas)
+    plot(energies, sampled_photons(ii, :), 'Color', [red_reds(ii), red_greens(ii), red_blues(ii)], 'LineWidth', line_width)
+end
+% legend(legend_string)
+ylabel('Photons')
+xlabel('Energies [kev]')
+    
+% Relative counts
+% After filter
+figure(3)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+% title('Spectrum after filter, relative photons')
+hold on
+for ii=1:length(thetas)
+    filtered = filtered_photons(ii, :) ./ sum(filtered_photons(ii, :));
+    plot(energies, filtered, 'Color', [green_reds(ii), green_greens(ii), green_blues(ii)], 'LineWidth', line_width)
+end
+% legend(legend_string)
+ylabel('Photon density / 1.0 [kev]')
+xlabel('Energies [kev]')
+% After sample
+figure(4)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+% title('Spectrum after sample, relative photons')
+hold on
+for ii=1:length(thetas)
+    sampled = sampled_photons(ii, :) ./ sum(sampled_photons(ii, :));
+    plot(energies, sampled, 'Color', [red_reds(ii), red_greens(ii), red_blues(ii)], 'LineWidth', line_width)
+end
+% legend(legend_string)
+ylabel('Photon density / 1.0 [kev]')
+xlabel('Energies [kev]')
 
 
+% Orig spectrum
 
+% abs
+yellow = [255 204 0] / 255;
+photons = filtered_photons(1, :);
+
+figure(5)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+plot(energies, photons, 'Color', yellow, 'LineWidth', line_width)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+ylabel('Photons')
+xlabel('Energies [kev]')
+% rel
+figure(6)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+photons_rel = photons ./ sum(photons);
+plot(energies, photons_rel, 'Color', yellow, 'LineWidth', line_width)
+set(gca,'fontsize',font_size, 'fontweight','bold')
+ylabel('Photon density / 1.0 [kev]')
+xlabel('Energies [kev]')
+
+% load('spectrum_orig.mat') % wrong spectrum, since not gratings included....
+% % abs
+% yellow = [255 204 0] / 255;
+% figure(5)
+% set(gca,'fontsize',font_size, 'fontweight','bold')
+% plot(energies, photons, 'Color', yellow, 'LineWidth', line_width)
+% ylabel('Photons')
+% xlabel('Energies [kev]')
+% % rel
+% figure(6)
+% set(gca,'fontsize',font_size, 'fontweight','bold')
+% photons_rel = photons ./ sum(photons);
+% plot(energies, photons_rel, 'Color', yellow, 'LineWidth', line_width)
+% ylabel('Photon density / 1.0 [kev]')
+% xlabel('Energies [kev]')
+% 
+
+% % mean and std var???
+% 
+% % Absolute counts
+% % After filter
+% figure(5)
+% set(gca,'fontsize',font_size, 'fontweight','bold')
+% errorbar(energies, mean(filtered_photons), std(filtered_photons))
