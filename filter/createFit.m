@@ -18,42 +18,45 @@
 % x = [0:0.003566:0.5];
 % x = x(1:length(y));
 
-load('results_0_7-rad_49_50-step_30_82-keV.mat')
-filter_thicknesses_1 = filter_thicknesses(1:8)*1e3; % [mm] was saved 1e-3 too small
-x_1 = x(1:8); % [mm]
-y_1 = y(1:8); % [mm]
-sample_thicknesses_1 = sample_thicknesses(1:8);
-
-load('results_8_16-rad_49_50-step_30_82-keV.mat')
-filter_thicknesses_2 = filter_thicknesses(9:17)*1e3; % [mm] was saved 1e-3 too small
-x_2 = x(9:17); % [mm]
-y_2 = y(9:17); % [mm]
-sample_thicknesses_2 = sample_thicknesses(9:17);
-
-load('results_17_end-rad_49_50-step_30_82-keV.mat')
-filter_thicknesses_3 = filter_thicknesses(18:end); % [mm]
-x_3 = x(18:end); % [mm]
-y_3 = y(18:end); % [mm]
-sample_thicknesses_3 = sample_thicknesses(18:end);
-
-filter_thicknesses(1:8) = filter_thicknesses_1;
-x(1:8) = x_1;
-y(1:8) = y_1;
-sample_thicknesses(1:8) = sample_thicknesses_1;
-filter_thicknesses(9:17) = filter_thicknesses_2;
-x(9:17) = x_2;
-y(9:17) = y_2;
-sample_thicknesses(9:17) = sample_thicknesses_2;
-filter_thicknesses(18:end) = filter_thicknesses_3;
-x(18:end) = x_3;
-y(18:end) = y_3;
-sample_thicknesses(18:end) = sample_thicknesses_3;
+% load('results_0_7-rad_49_50-step_30_82-keV.mat')
+% filter_thicknesses_1 = filter_thicknesses(1:8)*1e3; % [mm] was saved 1e-3 too small
+% x_1 = x(1:8); % [mm]
+% y_1 = y(1:8); % [mm]
+% sample_thicknesses_1 = sample_thicknesses(1:8);
+% 
+% load('results_8_16-rad_49_50-step_30_82-keV.mat')
+% filter_thicknesses_2 = filter_thicknesses(9:17)*1e3; % [mm] was saved 1e-3 too small
+% x_2 = x(9:17); % [mm]
+% y_2 = y(9:17); % [mm]
+% sample_thicknesses_2 = sample_thicknesses(9:17);
+% 
+% load('results_17_end-rad_49_50-step_30_82-keV.mat')
+% filter_thicknesses_3 = filter_thicknesses(18:end); % [mm]
+% x_3 = x(18:end); % [mm]
+% y_3 = y(18:end); % [mm]
+% sample_thicknesses_3 = sample_thicknesses(18:end);
+% 
+% filter_thicknesses(1:8) = filter_thicknesses_1;
+% x(1:8) = x_1;
+% y(1:8) = y_1;
+% sample_thicknesses(1:8) = sample_thicknesses_1;
+% filter_thicknesses(9:17) = filter_thicknesses_2;
+% x(9:17) = x_2;
+% y(9:17) = y_2;
+% sample_thicknesses(9:17) = sample_thicknesses_2;
+% filter_thicknesses(18:end) = filter_thicknesses_3;
+% x(18:end) = x_3;
+% y(18:end) = y_3;
+% sample_thicknesses(18:end) = sample_thicknesses_3;
 
 % x_final = x;
 % y_final = y;
 
 % x_final = x(1:8);
 % y_final = y(1:8);
+
+load('3mm-results_rad_49_50-step_30_82-keV.mat')
+% load('3mm-results_rad_24_25-step_30_82-keV.mat')
 
 % Remove 0s
 x(x==0) = [];
@@ -70,7 +73,7 @@ y_final = [fliplr(y_final(2:end)), y_final];
 [xData, yData] = prepareCurveData( x_final, y_final );
 
 % Set up fittype and options.
-filter_type = fittype( 'poly6' );
+filter_type = fittype( 'poly6' ); % poly6
 
 % Fit model to data.
 [fitresult, gof] = fit( xData, yData, filter_type );
@@ -105,18 +108,28 @@ plot(xlim, [1 1]*165, 'b')
 
 
 %%
-% x = [0:0.003566:0.5];
-x_inter = x_final;
-% x_inter = [-fliplr(x_final(2:end)), x_final];
-
-% y = fitresult.p1.*x_inter.^2 + fitresult.p2.*x_inter + fitresult.p3;
+% x_inter = x_final;
+x_inter = [0:1:20];
+x_inter = [-fliplr(x_inter(2:end)), x_inter];
 
 y = fitresult.p1.*x_inter.^6 + fitresult.p2.*x_inter.^5 + fitresult.p3.*x_inter.^4 + fitresult.p4.*x_inter.^3 + fitresult.p5.*x_inter.^2 + fitresult.p6.*x_inter + fitresult.p7;
-y = y - fitresult.p7; 
+y = y - fitresult.p7;
+% y = fitresult.p1.*x_inter.^4 + fitresult.p2.*x_inter.^3 + fitresult.p3.*x_inter.^2 + fitresult.p4.*x_inter + fitresult.p5;
+% y = y - fitresult.p5; 
+% y = fitresult.p1.*x_inter.^2 + fitresult.p2.*x_inter + fitresult.p3;
+% y = y - fitresult.p3; 
 
-figure(4)
+% y = 1.232e-07.*x_inter.^6 + 4.713e-20.*x_inter.^5 - 1.544e-05.*x_inter.^4 - 1.468e-17.*x_inter.^3 + 0.02935.*x_inter.^2 + 9.451e-16.*x_inter;
+
+figure%(4)
 hold on
 plot( x_inter, y, 'gr');
+plot(xData, yData-166 ,'o');
+legend('Filter', 'y vs. x', 'Location', 'NorthEast' );
+% Label axes
+xlabel('x [mm]')
+ylabel('y [mm]')
+grid on
 
 
 %% Show spectral development
