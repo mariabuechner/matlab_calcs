@@ -787,11 +787,12 @@ def read_sample_values():
     """
     pass
 
+
 def calc_vis(energies, design_energy, talbot_order):
     vis = 2/np.pi * np.abs(np.square(np.sin(np.pi/2 * design_energy/energies)) * np.sin(talbot_order*np.pi/2 * design_energy/energies))
     return vis
 
-#if _name__ == '__main__':
+# if _name__ == '__main__':
 #    from scipy import interpolate
 #    import matplotlib.pyplot as plt
 
@@ -828,58 +829,257 @@ def calc_vis(energies, design_energy, talbot_order):
 #    plt.plot(energy, abso, 'bo')
 #    plt.show()
 
+
+# For Raupach
+
+
+def _read_sample_files(sample_file_path):
+    """
+    Read from sample beta or delta file.
+
+    Parameters
+    ==========
+
+    sample_file_path [str]:         to *_beta.csv or *_beta.txt OR
+                                    to *_delta.csv or *_delta.txt file.
+                                    Delimiter is ',', see Format
+
+    Returns
+    =======
+
+    sample[dict] [keV]:             sample['energies']
+                                    sample['beta']
+                                    sample['delta']
+
+    Format
+    ======
+
+    energy, beta OR delta
+    1, 10e3
+    2, 23e4
+    .,.
+    .,.
+    .,.
+
+    """
+    if 'beta' in sample_file_path:
+        sample_file_path_beta = sample_file_path
+        sample_file_path_delta = sample_file_path.replace('beta', 'delta')
+    elif 'delta' in sample_file_path:
+        sample_file_path_delta = sample_file_path
+        sample_file_path_beta = sample_file_path.replace('delta', 'beta')
+
+    # Read dict from beta file
+    logger.debug("Reading from file {}...".format(sample_file_path_beta))
+    sample_struct_array = np.genfromtxt(sample_file_path_beta, delimiter=',',
+                                        names=True)  # np ndarray
+    if 'energy' in sample_struct_array.dtype.names:
+        # Rename 'energy' to 'energies'
+        sample_struct_array.dtype.names = ('energies', 'beta')
+    # Convert to dict
+    sample = dict()
+    try:
+        sample['energies'] = sample_struct_array['energies']
+        sample['beta'] = sample_struct_array['beta']
+    except AttributeError as e:
+        error_message = "sample file at {0} is missing '{1}'-column." \
+                        .format(sample_file_path_beta, str(e).split()[-1])
+        logger.error(error_message)
+        raise AttributeError(error_message)
+
+    # Read dict from delta file
+    logger.debug("Reading from file {}...".format(sample_file_path_delta))
+    sample_struct_array = np.genfromtxt(sample_file_path_delta, delimiter=',',
+                                        names=True)  # np ndarray
+    # Convert to dict
+    try:
+        sample['delta'] = sample_struct_array['delta']
+    except AttributeError as e:
+        error_message = "sample file at {0} is missing '{1}'-column." \
+                        .format(sample_file_path_delta, str(e).split()[-1])
+        logger.error(error_message)
+        raise AttributeError(error_message)
+
+    return sample
+
+
+def raupach_adapted(g_a, a, f, v_eff, d, energies, p_0, ref_mat, sample_mat):
+    """
+
+    """
+    # Always vectors
+    lambdas = energy_to_wavelength(energies) # [um]
+    dphis = np.abs(ref_mat["phi"] - sample_mat["phi"]) # [1/mu]
+    dmus = np.abs(ref_mat["mu"] - sample_mat["mu"]) # [1/mu]
+
+    # usually skalar
+    no_energy = np.sqrt(2.0/f) * v_eff * l/p_0
+
+    xi = no_energy * lambdas # [1/um]
+    mat_ratios = np.divide(dphis, dmus)
+    xi = np.multiply(xi, mat_ratios) # [1/um]
+
+    eta = np.square(g_a/a)*np.square(xi)
+    return eta
+
+
 if __name__ == '__main__':
 
-    spectrum, min_e, max_e = check_input._get_spectrum('C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/Python/gisimulation/gisimulation/data/spectra/Comet80kV.csv', [20,80],1,46)
-    energies = spectrum['energies']
-    counts = spectrum['photons']
+#    spectrum, min_e, max_e = check_input._get_spectrum('C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/Python/gisimulation/gisimulation/data/spectra/Comet80kV.csv', [20,80],1,46)
+#    energies = spectrum['energies']
+#    counts = spectrum['photons']
+#
+##    # Filter initial
+##    counts = counts * height_to_transmission(1000,'Al',energies)
+##    counts = counts * height_to_transmission(250,'Cu',energies)
+#    # Filter gratings
+#    counts = counts * height_to_transmission(180+10,'Au',energies)
+#    #counts = counts * height_to_transmission(180+10+180,'Au',energies)
+#
+#
+#    norm_counts = counts/np.sum(counts)
+#
+#    # 50 mm PMMA block
+#    # phase shift induced
+#    phase_shifts_50mm = height_to_shift(50000,'C5O2H8',energies,rho=1.18) # in PSC
+#    phase_shift_50mm = np.sum(norm_counts * phase_shifts_50mm)
+#    print("50 mm PMMA block phase shift is")
+#    print(phase_shift_50mm - np.pi)
+#
+#    # Visibility flat change induced
+#    vis =  calc_vis(energies, 46, 1)
+#    vis_flat = np.sum(norm_counts * vis)
+#    print("Original visibility is")
+#    print(vis_flat)
+#
+#    block_counts = counts * height_to_transmission(50000,'C5O2H8',energies,rho=1.18)
+#    norm_block_counts = block_counts/np.sum(block_counts)
+#    vis =  calc_vis(energies, 46, 1)
+#    vis_block = np.sum(norm_block_counts * vis)
+#    print("Block visibility is")
+#    print(vis_block)
+#
+#    vis_change = vis_block/vis_flat
+#    vis_real = 13.95
+#    print("change of vis is")
+#    print(vis_change)
+#    print("change of 13.95 is")
+#    print(vis_change*vis_real)
+#
+#    mean_energy = np.sum(norm_counts*energies)/len(energies)
+#    mean_block_energy = np.sum(norm_block_counts*energies)/len(energies)
+#    print("mean energy is")
+#    print(mean_energy)
+#    print("mean block energy is")
+#    print(mean_block_energy)
+#
+#    mean_change = mean_block_energy/mean_energy
+#    print("change of mean is")
+#    print(mean_change)
 
-    # Filter initial
-    #counts = counts * height_to_transmission(1000,'Al',energies)
-    #counts = counts * height_to_transmission(250,'Cu',energies)
-    # Filter gratings
-    #counts = counts * height_to_transmission(180+10+180,'Au',energies)
+    ### Raupach alaysis
+
+    # Read delta, beta and rho
+
+    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/adipose2_delta.csv"
+    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/glandular2_delta.csv"
+    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/calcification_delta.csv"
+    material_path = "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/"
+    adipose = _read_sample_files(material_path+"adipose2_delta.csv")
+    glandular = _read_sample_files(material_path+"glandular2_delta.csv")
+    calcification = _read_sample_files(material_path+"calcification_delta.csv")
+
+    breast_50_50 = _read_sample_files(material_path+"breast_50_50_delta.csv")
+    breast_33_67 = _read_sample_files(material_path+"breast_33_67_delta.csv")
+
+    #attenuation_coefficient(beta, energy)
+    #phase_shift(delta, energy)
+
+    energies = adipose["energies"] # keV
+
+    # Calc mu and phi
+
+    fat = dict()
+    fat["mu"] = attenuation_coefficient(adipose["beta"], energies)
+    fat["phi"] = phase_shift(adipose["delta"], energies)
+    fat['rho'] = 0.950 # g/cm3
+    fiber = dict()
+    fiber["mu"] = attenuation_coefficient(glandular["beta"], energies)
+    fiber["phi"] = phase_shift(glandular["delta"], energies)
+    fiber['rho'] = 1.020 # g/cm3
+    calc = dict()
+    calc["mu"] = attenuation_coefficient(calcification["beta"], energies)
+    calc["phi"] = phase_shift(calcification["delta"], energies)
+    calc['rho'] = 3.060 # g/cm3
+
+    b5050 = dict()
+    b5050["mu"] = attenuation_coefficient(breast_50_50["beta"], energies)
+    b5050["phi"] = phase_shift(breast_50_50["delta"], energies)
+    b5050['rho'] = 0.960 # g/cm3
+    b3367 = dict()
+    b3367["mu"] = attenuation_coefficient(breast_33_67["beta"], energies)
+    b3367["phi"] = phase_shift(breast_33_67["delta"], energies)
+    b3367['rho'] = 0.940 # g/cm3
+
+    # create tissue comps (tumor mass approx 100% glandular)
+
+    tumor = fiber.copy()
+
+    ratios = np.array(range(10, 100, 10), dtype=np.double) # %
+
+    breast_tissues = dict() # fat_gland
+    for fat_percentage in ratios:
+        fiber_percetage = 100.0 - fat_percentage
+        name = "breast_"+str(int(fat_percentage))+"_"+str(int(fiber_percetage))
+
+        mu = fat["mu"]*fat_percentage/100.0 + fiber["mu"]*fiber_percetage/100.0
+        phi = fat["phi"]*fat_percentage/100.0 + fiber["phi"]*fiber_percetage/100.0
+        rho = fat["rho"]*fat_percentage/100.0 + fiber["rho"]*fiber_percetage/100.0
+
+        breast_tissues[name] = dict()
+        breast_tissues[name]["mu"] = mu
+        breast_tissues[name]["phi"] = phi
+        breast_tissues[name]["rho"] = rho
+
+    # Calc raupach comp with optional parameter sweep
+
+    # all units in [um]
+
+    # Worste case
+
+    g_a = 0.5
+    a = 75.0*2.0 # efective pixel size (pixel size times magnification) [um]
+    f = 2.0
+    v_eff = 0.1
+
+    l = 288*1e3 # [um]
+    p_0 = 4.8 # [um]
+
+    sample_mat = tumor.copy()
+    ref_mat = b5050.copy()
+
+    test = raupach_adapted(g_a, a, f, v_eff, l, energies, p_0, ref_mat, sample_mat)
+
+    # plot comp over param sweep
 
 
-    norm_counts = counts/np.sum(counts)
 
-    # 50 mm PMMA block
-    # phase shift induced
-    phase_shifts_50mm = height_to_shift(50000,'C5O2H8',energies,rho=1.18) # in PSC
-    phase_shift_50mm = np.sum(norm_counts * phase_shifts_50mm)
-    print("50 mm PMMA block phase shift is")
-    print(phase_shift_50mm - np.pi)
 
-    # Visibility flat change induced
-    vis =  calc_vis(energies, 46, 1)
-    vis_flat = np.sum(norm_counts * vis)
-    print("Original visibility is")
-    print(vis_flat)
 
-    block_counts = counts * height_to_transmission(50000,'C5O2H8',energies,rho=1.18)
-    norm_block_counts = block_counts/np.sum(block_counts)
-    vis =  calc_vis(energies, 46, 1)
-    vis_block = np.sum(norm_block_counts * vis)
-    print("Block visibility is")
-    print(vis_block)
 
-    vis_change = vis_block/vis_flat
-    vis_real = 13.95
-    print("change of vis is")
-    print(vis_change)
-    print("change of 13.95 is")
-    print(vis_change*vis_real)
 
-    mean_energy = np.sum(norm_counts*energies)/len(energies)
-    mean_block_energy = np.sum(norm_block_counts*energies)/len(energies)
-    print("mean energy is")
-    print(mean_energy)
-    print("mean block energy is")
-    print(mean_block_energy)
 
-    mean_change = mean_energy/mean_block_energy
-    print("change of mean is")
-    print(mean_change)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
