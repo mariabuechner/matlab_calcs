@@ -903,7 +903,7 @@ def _read_sample_files(sample_file_path):
     return sample
 
 
-def raupach_adapted(g_a, a, f, v_eff, d, energies, p_0, ref_mat, sample_mat):
+def raupach_adapted(g_a, a, f, v_eff, d, energies, p_0, ref_mat, sample_mat, sigma_ratio):
     """
 
     """
@@ -913,7 +913,9 @@ def raupach_adapted(g_a, a, f, v_eff, d, energies, p_0, ref_mat, sample_mat):
     dmus = np.abs(ref_mat["mu"] - sample_mat["mu"]) # [1/mu]
 
     # usually skalar
-    no_energy = np.sqrt(2.0/f) * v_eff * l/p_0
+    no_energy = np.sqrt(2.0/f) * l/p_0 * sigma_ratio
+
+    no_energy = np.multiply(no_energy, v_eff)
 
     xi = no_energy * lambdas # [1/um]
     mat_ratios = np.divide(dphis, dmus)
@@ -926,6 +928,7 @@ def raupach_adapted(g_a, a, f, v_eff, d, energies, p_0, ref_mat, sample_mat):
 if __name__ == '__main__':
 
 #    spectrum, min_e, max_e = check_input._get_spectrum('C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/Python/gisimulation/gisimulation/data/spectra/Comet80kV.csv', [20,80],1,46)
+#    #spectrum, min_e, max_e = check_input._get_spectrum('C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/Python/gisimulation/gisimulation/data/spectra/Varian70kV.csv', [20,70],1,46)
 #    energies = spectrum['energies']
 #    counts = spectrum['photons']
 #
@@ -978,8 +981,21 @@ if __name__ == '__main__':
 #    print(mean_change)
 
     ### Raupach alaysis
+    design_energy = 46
+    talbot_order = 1
+    spectrum, min_e, max_e = check_input._get_spectrum('C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/Python/gisimulation/gisimulation/data/spectra/Varian70kV.csv', [20,70],1,design_energy)
+    # Filter initial
+    counts = spectrum['photons']
+    energies = spectrum['energies']
+    counts = counts * height_to_transmission(1000,'Al',energies)
+    counts = counts * height_to_transmission(250,'Cu',energies)
+    # Filter gratings
+    #counts = counts * height_to_transmission(180+10,'Au',energies)
+    #counts = counts * height_to_transmission(180+10+180,'Au',energies)
 
-    # Read delta, beta and rho
+    norm_counts = counts/np.sum(counts)
+
+    # Read delta, beta and rho (20-80 keV! -> for 20 to 70 take [0:51] element)
 
     # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/adipose2_delta.csv"
     # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/glandular2_delta.csv"
@@ -995,30 +1011,30 @@ if __name__ == '__main__':
     #attenuation_coefficient(beta, energy)
     #phase_shift(delta, energy)
 
-    energies = adipose["energies"] # keV
+    #energies = adipose["energies"] # keV
 
     # Calc mu and phi
 
     fat = dict()
-    fat["mu"] = attenuation_coefficient(adipose["beta"], energies)
-    fat["phi"] = phase_shift(adipose["delta"], energies)
+    fat["mu"] = attenuation_coefficient(adipose["beta"][0:51], energies)
+    fat["phi"] = phase_shift(adipose["delta"][0:51], energies)
     fat['rho'] = 0.950 # g/cm3
     fiber = dict()
-    fiber["mu"] = attenuation_coefficient(glandular["beta"], energies)
-    fiber["phi"] = phase_shift(glandular["delta"], energies)
+    fiber["mu"] = attenuation_coefficient(glandular["beta"][0:51], energies)
+    fiber["phi"] = phase_shift(glandular["delta"][0:51], energies)
     fiber['rho'] = 1.020 # g/cm3
     calc = dict()
-    calc["mu"] = attenuation_coefficient(calcification["beta"], energies)
-    calc["phi"] = phase_shift(calcification["delta"], energies)
+    calc["mu"] = attenuation_coefficient(calcification["beta"][0:51], energies)
+    calc["phi"] = phase_shift(calcification["delta"][0:51], energies)
     calc['rho'] = 3.060 # g/cm3
 
     b5050 = dict()
-    b5050["mu"] = attenuation_coefficient(breast_50_50["beta"], energies)
-    b5050["phi"] = phase_shift(breast_50_50["delta"], energies)
+    b5050["mu"] = attenuation_coefficient(breast_50_50["beta"][0:51], energies)
+    b5050["phi"] = phase_shift(breast_50_50["delta"][0:51], energies)
     b5050['rho'] = 0.960 # g/cm3
     b3367 = dict()
-    b3367["mu"] = attenuation_coefficient(breast_33_67["beta"], energies)
-    b3367["phi"] = phase_shift(breast_33_67["delta"], energies)
+    b3367["mu"] = attenuation_coefficient(breast_33_67["beta"][0:51], energies)
+    b3367["phi"] = phase_shift(breast_33_67["delta"][0:51], energies)
     b3367['rho'] = 0.940 # g/cm3
 
     # create tissue comps (tumor mass approx 100% glandular)
@@ -1055,14 +1071,26 @@ if __name__ == '__main__':
     l = 288*1e3 # [um]
     p_0 = 4.8 # [um]
 
+    sigma_ratio = 1.0/1.8 # same: 1.0
+
     sample_mat = tumor.copy()
+    #sample_mat = calc.copy()
     ref_mat = b5050.copy()
+    #ref_mat = breast_tissues["breast_10_90"].copy()
 
-    test = raupach_adapted(g_a, a, f, v_eff, l, energies, p_0, ref_mat, sample_mat)
+    eta = raupach_adapted(g_a, a, f, v_eff, l, energies, p_0, ref_mat, sample_mat, sigma_ratio)
+    # weight by spetrcal distribution
+    total_eta = sum(np.multiply(eta, norm_counts))
 
-    # plot comp over param sweep
 
 
+    # ideal visibilities
+
+    vis = 2/np.pi * abs( np.square(np.sin(np.pi/2 * np.divide(design_energy, energies))) * np.sin(talbot_order*np.pi/2 * np.divide(design_energy, energies)) )
+    total_vis = sum(np.multiply(vis, norm_counts))
+
+    ideal_eta = raupach_adapted(g_a, a, f, vis, l, energies, p_0, ref_mat, sample_mat, sigma_ratio)
+    total_ideal_eta = sum(np.multiply(ideal_eta, norm_counts))
 
 
 

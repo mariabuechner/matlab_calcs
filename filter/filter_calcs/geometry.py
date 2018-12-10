@@ -613,6 +613,7 @@ class Geometry():
         For cone
         """
         logger.info("Calculating inverse setup...")
+
         # G1 fixed
         if self._parameters['fixed_grating'] == 'g1':
             # Talbot distance (Dn)
@@ -871,15 +872,19 @@ class Geometry():
                                                 ['fixed_distance']]
 
                 # distance from G1 to G2 (dn)
-                # dn = s / (s * 2 * lambda / (n * p2^2) + 1)
+                # dn = s / (n * p0^2 / (s * 2 * lambda) + 1)
                 # lambda and p2 in um, need to be in mm
                 wavelength = self._parameters['design_wavelength'] * \
                     1e-3  # [mm]
                 p0 = self._parameters['pitch_g0'] * 1e-3  # [mm]
+                logger.info("######## total_length")
+                logger.info(total_length)
 
                 self._parameters['distance_g1_g2'] = total_length / \
                     ((self._parameters['talbot_order'] * p0**2) /
                      (2 * wavelength * total_length) + 1)  # [mm]
+                logger.info("######## g1 to g2")
+                logger.info(self._parameters['distance_g1_g2'])
 
                 # Distance from Source/G0 to G1 fixed (l)
                 to_g1 = total_length - \
