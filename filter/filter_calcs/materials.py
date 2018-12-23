@@ -985,13 +985,13 @@ if __name__ == '__main__':
 
     # GI design
 
-    energies = np.array(range(4000, 6001), dtype=float) * 0.01
-    minimal_absorption = 0.95
-    minimal_heights = absorption_to_height(minimal_absorption, 'Au', energies)
-    minimal_heights_dict = dict()
-
-    minimal_heights_dict['min_heights'] = minimal_heights
-    scipy.io.savemat('C:/Users/buechner_m/Documents/Code/Matlab/minimal_heights.mat', minimal_heights_dict)
+#    energies = np.array(range(4000, 6001), dtype=float) * 0.01
+#    minimal_absorption = 0.95
+#    minimal_heights = absorption_to_height(minimal_absorption, 'Au', energies)
+#    minimal_heights_dict = dict()
+#
+#    minimal_heights_dict['min_heights'] = minimal_heights
+#    scipy.io.savemat('C:/Users/buechner_m/Documents/Code/Matlab/minimal_heights.mat', minimal_heights_dict)
 
 #    for peak_energy in range(50,71):
 #        #peak_energy = 50
@@ -1052,107 +1052,122 @@ if __name__ == '__main__':
 #        varian_spectrum_example['AlAu200'] = counts_Al_Au_200
 #        varian_spectrum_example['CuAu200'] = counts_Cu_Au_200
 #        scipy.io.savemat('C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/Python/gisimulation/gisimulation/data/spectra/M1581-7-{0}kV-abs.mat'.format(peak_energy), varian_spectrum_example)
-#
-#    # Read delta, beta and rho (20-80 keV! -> for 20 to 70 take [0:51] element)
-#
-#    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/adipose2_delta.csv"
-#    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/glandular2_delta.csv"
-#    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/calcification_delta.csv"
-#    material_path = "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/"
-#    adipose = _read_sample_files(material_path+"adipose2_delta.csv")
-#    glandular = _read_sample_files(material_path+"glandular2_delta.csv")
-#    calcification = _read_sample_files(material_path+"calcification_delta.csv")
-#
-#    breast_50_50 = _read_sample_files(material_path+"breast_50_50_delta.csv")
-#    breast_33_67 = _read_sample_files(material_path+"breast_33_67_delta.csv")
-#
-#    #attenuation_coefficient(beta, energy)
-#    #phase_shift(delta, energy)
-#
-#    #energies = adipose["energies"] # keV
-#
-#    # Calc mu and phi
-#
-#    fat = dict()
-#    fat["mu"] = attenuation_coefficient(adipose["beta"][0:51], energies)
-#    fat["phi"] = phase_shift(adipose["delta"][0:51], energies)
-#    fat['rho'] = 0.950 # g/cm3
-#    fiber = dict()
-#    fiber["mu"] = attenuation_coefficient(glandular["beta"][0:51], energies)
-#    fiber["phi"] = phase_shift(glandular["delta"][0:51], energies)
-#    fiber['rho'] = 1.020 # g/cm3
-#    calc = dict()
-#    calc["mu"] = attenuation_coefficient(calcification["beta"][0:51], energies)
-#    calc["phi"] = phase_shift(calcification["delta"][0:51], energies)
-#    calc['rho'] = 3.060 # g/cm3
-#
-#    b5050 = dict()
-#    b5050["mu"] = attenuation_coefficient(breast_50_50["beta"][0:51], energies)
-#    b5050["phi"] = phase_shift(breast_50_50["delta"][0:51], energies)
-#    b5050['rho'] = 0.960 # g/cm3
-#    b3367 = dict()
-#    b3367["mu"] = attenuation_coefficient(breast_33_67["beta"][0:51], energies)
-#    b3367["phi"] = phase_shift(breast_33_67["delta"][0:51], energies)
-#    b3367['rho'] = 0.940 # g/cm3
-#
-#    # create tissue comps (tumor mass approx 100% glandular)
-#
-#    tumor = fiber.copy()
-#
+
+    # Read delta, beta and rho (20-80 keV! -> for 20 to 70 take [0:51] element)
+
+    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/adipose2_delta.csv"
+    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/glandular2_delta.csv"
+    # "C:/Users/buechner_m/Documents/Code/bCTDesign/Simulation/matlab_calcs/filter/filter_calcs/samples/calcification_delta.csv"
+
+    # Materials defined for 20 to 80 kev
+    material_path = "C:/Users/mbuec/Documents/MATLAB/matlab_calcs/filter/filter_calcs/samples/"
+    adipose = _read_sample_files(material_path+"adipose2_delta.csv")
+    glandular = _read_sample_files(material_path+"glandular2_delta.csv")
+    calcification = _read_sample_files(material_path+"calcification_delta.csv")
+
+    breast_50_50 = _read_sample_files(material_path+"breast_50_50_delta.csv")
+    breast_33_67 = _read_sample_files(material_path+"breast_33_67_delta.csv")
+
+    #attenuation_coefficient(beta, energy)
+    #phase_shift(delta, energy)
+
+    energies = adipose["energies"][0:-10] # keV
+
+    # Calc mu and phi
+
+    fat = dict()
+    fat["mu"] = attenuation_coefficient(adipose["beta"][0:-10], energies)
+    fat["phi"] = phase_shift(adipose["delta"][0:-10], energies)
+    fat['rho'] = 0.950 # g/cm3
+    fiber = dict()
+    fiber["mu"] = attenuation_coefficient(glandular["beta"][0:-10], energies)
+    fiber["phi"] = phase_shift(glandular["delta"][0:-10], energies)
+    fiber['rho'] = 1.020 # g/cm3
+    calc = dict()
+    calc["mu"] = attenuation_coefficient(calcification["beta"][0:-10], energies)
+    calc["phi"] = phase_shift(calcification["delta"][0:-10], energies)
+    calc['rho'] = 3.060 # g/cm3
+
+    b5050 = dict()
+    b5050["mu"] = attenuation_coefficient(breast_50_50["beta"][0:-10], energies)
+    b5050["phi"] = phase_shift(breast_50_50["delta"][0:-10], energies)
+    b5050['rho'] = 0.960 # g/cm3
+    b3367 = dict()
+    b3367["mu"] = attenuation_coefficient(breast_33_67["beta"][0:-10], energies)
+    b3367["phi"] = phase_shift(breast_33_67["delta"][0:-10], energies)
+    b3367['rho'] = 0.940 # g/cm3
+
+    # save for matlab
+    material_luts = dict()
+    material_luts['fat'] = fat
+    material_luts['fiber'] = fiber
+    material_luts['calc'] = calc
+    material_luts['b5050'] = b5050
+    material_luts['b3367'] = b3367
+    material_luts['energies'] = energies
+    scipy.io.savemat("C:/Users/mbuec/Documents/MATLAB/material_luts.mat", material_luts)
+
+
+    # create tissue comps (tumor mass approx 100% glandular)
+
+    tumor = fiber.copy()
+
 #    ratios = np.array(range(10, 100, 10), dtype=np.double) # %
 #
-##    breast_tissues = dict() # fat_gland
-##    for fat_percentage in ratios:
-##        fiber_percetage = 100.0 - fat_percentage
-##        name = "breast_"+str(int(fat_percentage))+"_"+str(int(fiber_percetage))
-##
-##        mu = fat["mu"]*fat_percentage/100.0 + fiber["mu"]*fiber_percetage/100.0
-##        phi = fat["phi"]*fat_percentage/100.0 + fiber["phi"]*fiber_percetage/100.0
-##        rho = fat["rho"]*fat_percentage/100.0 + fiber["rho"]*fiber_percetage/100.0
-##
-##        breast_tissues[name] = dict()
-##        breast_tissues[name]["mu"] = mu
-##        breast_tissues[name]["phi"] = phi
-##        breast_tissues[name]["rho"] = rho
+#    breast_tissues = dict() # fat_gland
+#    for fat_percentage in ratios:
+#        fiber_percetage = 100.0 - fat_percentage
+#        name = "breast_"+str(int(fat_percentage))+"_"+str(int(fiber_percetage))
 #
-#    # Calc raupach comp with optional parameter sweep
+#        mu = fat["mu"]*fat_percentage/100.0 + fiber["mu"]*fiber_percetage/100.0
+#        phi = fat["phi"]*fat_percentage/100.0 + fiber["phi"]*fiber_percetage/100.0
+#        rho = fat["rho"]*fat_percentage/100.0 + fiber["rho"]*fiber_percetage/100.0
 #
-#    sample_mat = tumor.copy()
-#    #sample_mat = calc.copy()
-#    ref_mat = b5050.copy()
-#    #ref_mat = breast_tissues["breast_10_90"].copy()
-#
-#    # all units in [um]
-#
-#    # Worste case
-#
-#    g_a = np.sqrt(3.0/8.0) # first raupach paper, FBP CT ga
-#    a = 75.0*2.0 # efective pixel size (pixel size times magnification) [um]
-#    line_pairs_per_cm = g_a/a * 10000 # (here ca 40 lm/per cm, measure (RADIPGRAPHY< NOT RECO MTF...) 5-8/mm -> 50-80/cm-> focal spot blurring???) (abso: 5 and 6 for sure, 7 maybe; dpc up to 8)
-#
-#    f = 2.0
-#    v_eff = 0.1
-#
-#    l = 288*1e3 # [um]
-#    p_0 = 4.8 # [um]
-#
-#    sigma_ratio = 1.0/1.8 # same: 1.0 realistic case if e_p and E_a the same, as is now
-#
-#    eta = raupach_adapted(g_a, a, f, v_eff, l, energies, p_0, ref_mat, sample_mat, sigma_ratio)
-#    # weight by spetrcal distribution
-#    total_eta = sum(np.multiply(eta, norm_counts))
-#
-#
-#
-#    # ideal visibilities
-#
-#    sigma_ratio = 1.0 # same: 1.0 realistic case if e_p and E_a the same, as is now
-#
-#    vis = 2/np.pi * abs( np.square(np.sin(np.pi/2 * np.divide(design_energy, energies))) * np.sin(talbot_order*np.pi/2 * np.divide(design_energy, energies)) )
-#    total_vis = sum(np.multiply(vis, norm_counts))
-#
-#    ideal_eta = raupach_adapted(g_a, a, f, vis, l, energies, p_0, ref_mat, sample_mat, sigma_ratio)
-#    total_ideal_eta = sum(np.multiply(ideal_eta, norm_counts))
+#        breast_tissues[name] = dict()
+#        breast_tissues[name]["mu"] = mu
+#        breast_tissues[name]["phi"] = phi
+#        breast_tissues[name]["rho"] = rho
+
+    # Calc raupach comp with optional parameter sweep
+
+
+
+    sample_mat = tumor.copy()
+    #sample_mat = calc.copy()
+    ref_mat = b5050.copy()
+    #ref_mat = breast_tissues["breast_10_90"].copy()
+
+    # all units in [um]
+
+    # Worste case
+
+    g_a = np.sqrt(3.0/8.0) # first raupach paper, FBP CT ga
+    a = 75.0*2.0 # efective pixel size (pixel size times magnification) [um]
+    line_pairs_per_cm = g_a/a * 10000 # (here ca 40 lm/per cm, measure (RADIPGRAPHY< NOT RECO MTF...) 5-8/mm -> 50-80/cm-> focal spot blurring???) (abso: 5 and 6 for sure, 7 maybe; dpc up to 8)
+
+    f = 2.0
+    v_eff = 0.1
+
+    l = 288*1e3 # [um]
+    p_0 = 4.8 # [um]
+
+    sigma_ratio = 1.0/1.8 # same: 1.0 realistic case if e_p and E_a the same, as is now
+
+    eta = raupach_adapted(g_a, a, f, v_eff, l, energies, p_0, ref_mat, sample_mat, sigma_ratio)
+    # weight by spetrcal distribution
+    total_eta = sum(np.multiply(eta, norm_counts))
+
+
+
+    # ideal visibilities
+
+    sigma_ratio = 1.0 # same: 1.0 realistic case if e_p and E_a the same, as is now
+
+    vis = 2/np.pi * abs( np.square(np.sin(np.pi/2 * np.divide(design_energy, energies))) * np.sin(talbot_order*np.pi/2 * np.divide(design_energy, energies)) )
+    total_vis = sum(np.multiply(vis, norm_counts))
+
+    ideal_eta = raupach_adapted(g_a, a, f, vis, l, energies, p_0, ref_mat, sample_mat, sigma_ratio)
+    total_ideal_eta = sum(np.multiply(ideal_eta, norm_counts))
 
 
 
